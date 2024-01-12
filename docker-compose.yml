@@ -1,0 +1,46 @@
+version: '3.8'
+
+services:
+  srsepc:
+    image: virt-srsran
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: virtual-srsepc
+    volumes:
+      - /opt/srsRAN/config:/etc/srsran
+      - /opt/srsRAN/tmp-logs:/logs
+    networks:
+      ipvlan10:
+        ipv4_address: 192.168.20.200
+      corenet:
+        ipv4_address: 10.80.95.10
+    cap_add:
+      - NET_ADMIN
+      - SYS_NICE
+    devices:
+      - /dev/net/tun
+
+  srsenb:
+    image: virt-srsran
+    container_name: virtual-srsenb
+    volumes:
+      - /opt/srsRAN/config:/etc/srsran
+      - /opt/srsRAN/tmp-logs:/logs
+    networks:
+      corenet:
+        ipv4_address: 10.80.95.11
+    ipc: shareable
+    cap_add:
+      - SYS_NICE
+    devices:
+      - /dev/bus/usb/002/002 # Confirm bladeRF with lsusb
+
+networks:
+  ipvlan20:
+    external: true
+  corenet:
+    ipam:
+      driver: default
+      config:
+        - subnet: 10.80.95.0/24
